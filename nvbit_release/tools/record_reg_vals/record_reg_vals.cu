@@ -270,11 +270,12 @@ void print_data_csv(reg_info_t* ri) {
 			" LANEID "  << ri->lane_id        << " " << id_to_sass_map[ri->opcode_id] << std::endl;
 
 //	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
+	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		for (int i = 0; i < 32; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
-			nvbit_trace_file    << "R"                      << reg_idx  << "T" << i << ":"
-					<< std::hex << ri->reg_vals[i][reg_idx] << std::dec << " ";
+			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
+			nvbit_trace_file << temp;
 		}
 	}
 	//printf("\n");
