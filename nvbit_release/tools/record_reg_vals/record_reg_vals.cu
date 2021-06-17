@@ -34,6 +34,8 @@
 #include <vector>
 #include <unordered_set>
 
+#include <fstream> //final trace
+#include <sstream>
 /* every tool needs to include this once */
 #include "nvbit_tool.h"
 
@@ -69,6 +71,13 @@ int verbose = 0;
 std::map<std::string, int> sass_to_id_map;
 std::map<int, std::string> id_to_sass_map;
 
+/**
+ * Fernando mod
+ * Final trace file
+ */
+const std::string output_trace_file = "nvbit_trace_file.txt";
+std::ofstream nvbit_trace_file;
+
 void nvbit_at_init() {
 	setenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1", 1);
 	GET_VAR_INT(instr_begin_interval, "INSTR_BEGIN", 0,
@@ -78,6 +87,7 @@ void nvbit_at_init() {
 	GET_VAR_INT(verbose, "TOOL_VERBOSE", 0, "Enable verbosity inside the tool");
 	//std::string pad(100, '-');
 	//printf("%s\n", pad.c_str());
+	nvbit_trace_file.open(output_trace_file, std::ios::out);
 }
 /* Set used to avoid re-instrumenting the same functions multiple times */
 std::unordered_set<CUfunction> already_instrumented;
@@ -183,11 +193,20 @@ void nvbit_at_cuda_event(CUcontext ctx, int is_exit, nvbit_api_cuda_t cbid, cons
 
 			nvbit_enable_instrumented(ctx, p->f, true);
 
-			printf("Kernel %s - grid size %d,%d,%d - block size %d,%d,%d - nregs "
-					"%d - shmem %d - cuda stream id %ld\n", nvbit_get_func_name(ctx, p->f),
-					p->gridDimX, p->gridDimY, p->gridDimZ, p->blockDimX, p->blockDimY, p->blockDimZ,
-					nregs, shmem_static_nbytes + p->sharedMemBytes, (uint64_t) p->hStream);
+//			printf("Kernel %s - grid size %d,%d,%d - block size %d,%d,%d - nregs "
+//					"%d - shmem %d - cuda stream id %ld\n", nvbit_get_func_name(ctx, p->f),
+//					p->gridDimX, p->gridDimY, p->gridDimZ, p->blockDimX, p->blockDimY, p->blockDimZ,
+//					nregs, shmem_static_nbytes + p->sharedMemBytes, (uint64_t) p->hStream);
 			recv_thread_receiving = true;
+
+			/**
+			 * Fernando mod
+			 */
+			nvbit_trace_file << "Kernel " << nvbit_get_func_name(ctx, p->f) << " - grid size "
+					<< p->gridDimX << "," << p->gridDimY << "," << p->gridDimZ << " - block size "
+					<< p->blockDimX << "," << p->blockDimY << "," << p->blockDimZ << " - nregs "
+					<< nregs << " - shmem " << shmem_static_nbytes + p->sharedMemBytes
+					<< " - cuda stream id " << (uint64_t) p->hStream << std::endl;
 
 		} else {
 			/* make sure current kernel is completed */
@@ -233,20 +252,38 @@ void print_data(reg_info_t* ri) {
 	printf("\n");
 }
 
-void print_data_csv(reg_info_t* ri) {
-	printf("CTA %d,%d,%d - NCTA %d,%d,%d - WARPID %d - GWARPID %d - SMID %d - LANEID %d - ",
-			ri->cta_id_x, ri->cta_id_y, ri->cta_id_z, // CTA
-			ri->ncta_id_x, ri->ncta_id_y, ri->ncta_id_z, // NCTA
-			ri->warp_id, ri->global_warp_id, ri->sm_id, ri->lane_id //WARP, global WARP, SM and LANE ID
-			);
+template<typename T>
+std::string int_to_hex(T i) {
+	std::stringstream stream;
+	stream << "0x" << std::setfill('0') << std::setw(sizeof(T) * 2) << std::hex << i;
+	return stream.str();
+}
 
-	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
+void print_data_csv(reg_info_t* ri) {
+//	printf("CTA %d,%d,%d - NCTA %d,%d,%d - WARPID %d - GWARPID %d - SMID %d - LANEID %d - ",
+//			ri->cta_id_x, ri->cta_id_y, ri->cta_id_z, // CTA
+//			ri->ncta_id_x, ri->ncta_id_y, ri->ncta_id_z, // NCTA
+//			ri->warp_id, ri->global_warp_id, ri->sm_id, ri->lane_id //WARP, global WARP, SM and LANE ID
+//			);
+
+	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z
+			<< // CTA
+			" - NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
+			<< // NCTA
+			" - WARPID " << ri->warp_id << " - GWARPID " << ri->global_warp_id << " - SMID "
+			<< ri->sm_id << " - LANEID %d - " << ri->lane_id; //WARP, global WARP, SM and LANE ID
+
+	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
+//	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		for (int i = 0; i < 32; i++) {
-			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
+//			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
+			nvbit_trace_file << "R" << reg_idx << "T" << i << ":"
+					<< int_to_hex(ri->reg_vals[i][reg_idx]) << " ";
 		}
 	}
-	printf("\n");
+	//printf("\n");
+	nvbit_trace_file << std::endl;
 
 }
 
