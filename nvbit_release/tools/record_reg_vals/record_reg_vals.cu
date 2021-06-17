@@ -271,7 +271,7 @@ void print_data_csv(reg_info_t* ri) {
 			" - NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
 			<< // NCTA
 			" - WARPID " << ri->warp_id << " - GWARPID " << ri->global_warp_id << " - SMID "
-			<< ri->sm_id << " - LANEID - " << ri->lane_id; //WARP, global WARP, SM and LANE ID
+			<< ri->sm_id << " - LANEID - " << ri->lane_id << " "; //WARP, global WARP, SM and LANE ID
 
 	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
 //	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
@@ -279,7 +279,7 @@ void print_data_csv(reg_info_t* ri) {
 		for (int i = 0; i < 32; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
 			nvbit_trace_file << "R" << reg_idx << "T" << i << ":"
-					<< int_to_hex(ri->reg_vals[i][reg_idx]) << " ";
+					<< std::hex << ri->reg_vals[i][reg_idx] << std::dec << " ";
 		}
 	}
 	//printf("\n");
