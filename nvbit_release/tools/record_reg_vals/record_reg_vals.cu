@@ -277,6 +277,7 @@ void print_data_csv(reg_info_t* ri) {
 			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
 			nvbit_trace_file << temp;
 		}
+		nvbit_trace_file << std::endl;
 	}
 	//printf("\n");
 	nvbit_trace_file << std::endl;
