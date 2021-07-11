@@ -245,7 +245,7 @@ void print_data(reg_info_t* ri) {
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		printf("* ");
 		for (int i = 0; i < 32; i++) {
-			printf("Reg%d_T%d: 0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
+			printf("Reg%d_T%d: 0x%08x ", reg_idx, i, ri->reg_vals[reg_idx]);
 		}
 		printf("\n");
 	}
@@ -261,19 +261,19 @@ void print_data_csv(reg_info_t* ri) {
 
 	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z
 			<< // CTA
-			" NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
-			<< // NCTA
+//			" NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
+//			<< // NCTA
 			" WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
 			<< " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
 
 //	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
 	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
-		for (int i = 0; i < 32; i++) {
+//		for (int i = 0; i < 32; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
-			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
+			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, ri->lane_id, ri->reg_vals[reg_idx]);
 			nvbit_trace_file << temp;
-		}
+//		}
 		if (reg_idx < ri->num_regs - 1)
 			nvbit_trace_file << std::endl;
 	}
@@ -283,7 +283,9 @@ void print_data_csv(reg_info_t* ri) {
 }
 
 void *recv_thread_fun(void *) {
-	char *recv_buffer = (char *) malloc(CHANNEL_SIZE);
+	//32 is necessary if all threads in the warp will write to the final stack
+	constexpr auto final_size = CHANNEL_SIZE * 32;
+	char *recv_buffer = (char *) malloc(final_size);
 
 	while (recv_thread_started) {
 		uint32_t num_recv_bytes = 0;
