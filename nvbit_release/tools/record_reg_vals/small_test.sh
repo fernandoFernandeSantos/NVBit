@@ -3,7 +3,7 @@ set -x
 set -e
 
 SAMPLES_DIR=$HOME/NVIDIA_CUDA-11.3_Samples/0_Simple/matrixMul
-RECORD_REGS_DIR=$HOME/git_research/NVBit/nvbit_release/tools/record_reg_vals
+RECORD_REGS_DIR=$HOME/NVBit/nvbit_release/tools/record_reg_vals
 
 # Build the instrumenter
 cd $RECORD_REGS_DIR
