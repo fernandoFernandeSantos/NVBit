@@ -266,7 +266,7 @@ void print_data_csv(reg_info_t* ri) {
 //			" WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
 //			<< " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
 
-	nvbit_trace << ri->cta_id_x << "," << ri->cta_id_y                   << "," << ri->cta_id_z
+	nvbit_trace_file << ri->cta_id_x << "," << ri->cta_id_y                   << "," << ri->cta_id_z
 				<< ri->warp_id  << "," << ri->global_warp_id             << "," << ri->sm_id
 				<< ri->lane_id  << "," << id_to_sass_map[ri->opcode_id]  << ",";
 
