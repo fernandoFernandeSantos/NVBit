@@ -45,7 +45,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_
 
 	unsigned active_mask = __ballot_sync(__activemask(), 1);
 	const int laneid = get_laneid();
-//	const int first_laneid = __ffs(active_mask) - 1;
+	const int first_laneid = __ffs(active_mask) - 1;
 
 	reg_info_t ri;
 
@@ -60,13 +60,14 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_
 	ri.lane_id = laneid;
 	ri.sm_id = get_smid();
 	int4 ncta = get_nctaid();
-//	ri.ncta_id_x = ncta.x;
-//	ri.ncta_id_y = ncta.y;
-//	ri.ncta_id_z = ncta.z;
+	ri.ncta_id_x = ncta.x;
+	ri.ncta_id_y = ncta.y;
+	ri.ncta_id_z = ncta.z;
 	ri.global_warp_id = get_global_warp_id();
 	/*-------------------*/
 	ri.opcode_id = opcode_id;
 	ri.num_regs = num_regs;
+
 
 	if (num_regs) {
 		va_list vl;
@@ -76,20 +77,16 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_
 			uint32_t val = va_arg(vl, uint32_t);
 
 			/* collect register values from other threads */
-//			for (int tid = 0; tid < 32; tid++) {
-//				ri.reg_vals[tid][i] = __shfl_sync(active_mask, val, tid);
-//			}
-			// Trying to make all threads update
-			ri.reg_vals[i] = __shfl_sync(active_mask, val, laneid);
-
+			for (int tid = 0; tid < 32; tid++) {
+				ri.reg_vals[tid][i] = __shfl_sync(active_mask, val, tid);
+			}
 		}
 		va_end(vl);
 	}
 
 	/* first active lane pushes information on the channel */
-	//	if (first_laneid == laneid) {
-	ChannelDev *channel_dev = (ChannelDev *)pchannel_dev;
-	channel_dev->push(&ri, sizeof(reg_info_t));
-
-	//	}
+	if (first_laneid == laneid) {
+		ChannelDev *channel_dev = (ChannelDev *)pchannel_dev;
+		channel_dev->push(&ri, sizeof(reg_info_t));
+	}
 }

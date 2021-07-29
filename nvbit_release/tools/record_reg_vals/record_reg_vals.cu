@@ -208,6 +208,8 @@ void nvbit_at_cuda_event(CUcontext ctx, int is_exit, nvbit_api_cuda_t cbid, cons
 					<< nregs << " shmem " << shmem_static_nbytes + p->sharedMemBytes
 					<< " cudastreamid " << (uint64_t) p->hStream << std::endl;
 
+//			nvbit_trace_file << "cta_id_x,cta_id_y,cta_id_z,warp_id,global_warp_id,sm_id,lane_id,opcode\n";
+
 		} else {
 			/* make sure current kernel is completed */
 			cudaDeviceSynchronize();
@@ -245,7 +247,7 @@ void print_data(reg_info_t* ri) {
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		printf("* ");
 		for (int i = 0; i < 32; i++) {
-			printf("Reg%d_T%d: 0x%08x ", reg_idx, i, ri->reg_vals[reg_idx]);
+			printf("Reg%d_T%d: 0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
 		}
 		printf("\n");
 	}
@@ -259,27 +261,28 @@ void print_data_csv(reg_info_t* ri) {
 //			ri->warp_id, ri->global_warp_id, ri->sm_id, ri->lane_id //WARP, global WARP, SM and LANE ID
 //			);
 
-//	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z
-//			<< // CTA
-////			" NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
-////			<< // NCTA
-//			" WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
-//			<< " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
+	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z
+			<< // CTA
+			" NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
+			<< // NCTA
+			" WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
+			<< " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
 
-	nvbit_trace_file << ri->cta_id_x << "," << ri->cta_id_y                   << "," << ri->cta_id_z
-				<< ri->warp_id  << "," << ri->global_warp_id             << "," << ri->sm_id
-				<< ri->lane_id  << "," << id_to_sass_map[ri->opcode_id]  << ",";
+//	nvbit_trace_file << ri->cta_id_x << "," << ri->cta_id_y                   << "," << ri->cta_id_z
+//				<< ri->warp_id  << "," << ri->global_warp_id             << "," << ri->sm_id
+//				<< ri->lane_id  << "," << id_to_sass_map[ri->opcode_id]  << ",";
 
 //	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
+	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
 	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
-//		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < 32; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
-			sprintf(temp, "R%dT%d:0x%08x|", reg_idx, ri->lane_id, ri->reg_vals[reg_idx]);
+			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, ri->lane_id, ri->reg_vals[i][reg_idx]);
 			nvbit_trace_file << temp;
-//		}
-//		if (reg_idx < ri->num_regs - 1)
-//			nvbit_trace_file << std::endl;
+		}
+		if (reg_idx < ri->num_regs - 1)
+			nvbit_trace_file << std::endl;
 	}
 	//printf("\n");
 	nvbit_trace_file << std::endl;
