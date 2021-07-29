@@ -273,7 +273,7 @@ void print_data_csv(reg_info_t* ri) {
 //				<< ri->lane_id  << "," << id_to_sass_map[ri->opcode_id]  << ",";
 
 //	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
-	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
+//	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
 	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		for (int i = 0; i < 32; i++) {
