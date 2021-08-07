@@ -84,7 +84,7 @@ std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string&
     std::regex sass_regex(".*c\\[(0[xX][0-9a-fA-F]+)\\]\\[(0[xX][0-9a-fA-F]+)\\].*");
     std::smatch match;
     auto m = std::regex_match(sass_line, match, sass_regex);
-    if(m == false){
+    if(m == false && (sass_line.find("c[") != std::string::npos)){
     	std::cerr << "Problem when parsing the SASS line " << sass_line << std::endl;
     	throw;
     }
