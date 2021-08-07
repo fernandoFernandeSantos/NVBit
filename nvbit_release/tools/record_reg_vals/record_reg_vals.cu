@@ -33,7 +33,7 @@
 #include <map>
 #include <vector>
 #include <unordered_set>
-
+#include <utility> // cbank list
 #include <fstream> //final trace
 #include <sstream>
 /* every tool needs to include this once */
@@ -75,8 +75,17 @@ std::map<int, std::string> id_to_sass_map;
  * Fernando mod
  * Final trace file
  */
-const std::string output_trace_file = "nvbit_trace_file.txt";
+constexpr char output_trace_file[] = "nvbit_trace_file.txt";
 std::ofstream nvbit_trace_file;
+
+/*get the c[bankid][bankoffset] list from the sass instruction*/
+std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string sass_line) {
+	std::vector<std::pair<int32_t, int32_t>> cbank_list;
+	std::cout << "sass_line: " << sass_line << std::endl;
+	return cbank_list;
+}
+
+/**************************************************************************/
 
 void nvbit_at_init() {
 	setenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1", 1);
@@ -156,6 +165,16 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 				 * the instrument function record_reg_val() */
 				nvbit_add_call_arg_reg_val(instr, num, true);
 			}
+			/**************************************************************************
+			 * Edition trying to load all the cbank values
+			 **************************************************************************/
+			// extract vector of pair with c[bankid][bankoffset]
+			auto cbank_values = extract_cbank_vector(instr->getSass());
+			for (auto& cbank : cbank_values) {
+				std::cout << "SASS: " << instr->getSass() << " - c[" << cbank.first << "]["
+						<< cbank.second << "]\n";
+			}
+			/**************************************************************************/
 			cnt++;
 		}
 	}
