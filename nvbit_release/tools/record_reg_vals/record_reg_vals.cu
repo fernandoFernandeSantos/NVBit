@@ -35,6 +35,7 @@
 #include <unordered_set>
 #include <utility> // cbank list
 #include <fstream> //final trace
+#include <regex> // find cbank in the sass
 #include <sstream>
 /* every tool needs to include this once */
 #include "nvbit_tool.h"
@@ -79,10 +80,22 @@ constexpr char output_trace_file[] = "nvbit_trace_file.txt";
 std::ofstream nvbit_trace_file;
 
 /*get the c[bankid][bankoffset] list from the sass instruction*/
-std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string sass_line) {
+std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string& sass_line) {
+    std::regex sass_regex(".*c\\[(0[xX][0-9a-fA-F]+)\\]\\[(0[xX][0-9a-fA-F]+)\\].*");
+    std::smatch match;
+    auto m = std::regex_match(sass_line, match, sass_regex);
+    if(m == false){
+    	std::cerr << "Problem when parsing the SASS line " << sass_line << std::endl;
+    	throw;
+    }
 	std::vector<std::pair<int32_t, int32_t>> cbank_list;
-	std::cout << "sass_line: " << sass_line << std::endl;
-	return cbank_list;
+    for(uint32_t i = 1; i < match.size(); i+= 2){
+    	auto bank_id = std::stoi(match[i], nullptr, 16);
+    	auto bank_offset = std::stoi(match[i + 1], nullptr, 16);
+    	std::pair<int32_t, int32_t> cbank(bank_id, bank_offset);
+    	cbank_list.push_back(cbank);
+    }
+    return cbank_list;
 }
 
 /**************************************************************************/
