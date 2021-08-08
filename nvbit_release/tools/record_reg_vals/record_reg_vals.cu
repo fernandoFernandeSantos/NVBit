@@ -294,10 +294,8 @@ void print_data_csv(reg_info_t* ri) {
 		return stream.str();
 	};
 
-	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z
-			<< // CTA
-			" NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z
-			<< // NCTA
+	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z << // CTA
+			" NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z << // NCTA
 			" WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
 			<< " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
 
