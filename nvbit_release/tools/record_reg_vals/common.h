@@ -39,6 +39,7 @@ typedef struct {
 	/**
 	 * Fernando PF modification
 	 */
+	int32_t num_cbank;
 	int32_t sm_id;
 	int32_t lane_id;
 	int32_t ncta_id_x;
@@ -48,6 +49,6 @@ typedef struct {
 
 	/* 32 lanes, each thread can store up to 5 register values */
 	uint32_t reg_vals[32][8];
-	//Trying to write for all lanes in the app separately
-//	uint32_t reg_vals[8];
+	/*CBANK vals */
+	uint32_t cbank_vals[32][8];
 } reg_info_t;

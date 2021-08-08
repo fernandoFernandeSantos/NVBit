@@ -81,21 +81,21 @@ std::ofstream nvbit_trace_file;
 
 /*get the c[bankid][bankoffset] list from the sass instruction*/
 std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string& sass_line) {
-    std::regex sass_regex(".*c\\[(0[xX][0-9a-fA-F]+)\\]\\[(0[xX][0-9a-fA-F]+)\\].*");
-    std::smatch match;
-    auto m = std::regex_match(sass_line, match, sass_regex);
-    if(m == false && (sass_line.find("c[") != std::string::npos)){
-    	std::cerr << "Problem when parsing the SASS line " << sass_line << std::endl;
-    	throw;
-    }
+	std::regex sass_regex(".*c\\[(0[xX][0-9a-fA-F]+)\\]\\[(0[xX][0-9a-fA-F]+)\\].*");
+	std::smatch match;
+	auto m = std::regex_match(sass_line, match, sass_regex);
+	if (m == false && (sass_line.find("c[") != std::string::npos)) {
+		std::cerr << "Problem when parsing the SASS line " << sass_line << std::endl;
+		throw;
+	}
 	std::vector<std::pair<int32_t, int32_t>> cbank_list;
-    for(uint32_t i = 1; i < match.size(); i+= 2){
-    	auto bank_id = std::stoi(match[i], nullptr, 16);
-    	auto bank_offset = std::stoi(match[i + 1], nullptr, 16);
-    	std::pair<int32_t, int32_t> cbank(bank_id, bank_offset);
-    	cbank_list.push_back(cbank);
-    }
-    return cbank_list;
+	for (uint32_t i = 1; i < match.size(); i += 2) {
+		auto bank_id = std::stoi(match[i], nullptr, 16);
+		auto bank_offset = std::stoi(match[i + 1], nullptr, 16);
+		std::pair < int32_t, int32_t > cbank(bank_id, bank_offset);
+		cbank_list.push_back(cbank);
+	}
+	return cbank_list;
 }
 
 /**************************************************************************/
@@ -179,13 +179,20 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 				nvbit_add_call_arg_reg_val(instr, num, true);
 			}
 			/**************************************************************************
-			 * Edition trying to load all the cbank values
+			 * Edit: trying to load all the cbank values
 			 **************************************************************************/
 			// extract vector of pair with c[bankid][bankoffset]
 			auto cbank_values = extract_cbank_vector(instr->getSass());
+			// how many constant operands
+			nvbit_add_call_arg_const_val32(instr, cbank_values.size());
+			// For some reason I have to put the size of the operands at
+			// the end of the var list
+			nvbit_add_call_arg_const_val32(instr, reg_num_list.size() + cbank_values.size());
+			//instrument the constant operands
 			for (auto& cbank : cbank_values) {
-				std::cout << "SASS: " << instr->getSass() << " - c[" << cbank.first << "]["
-						<< cbank.second << "]\n";
+//				std::cout << "SASS: " << instr->getSass() << " - c[" << cbank.first << "]["
+//						<< cbank.second << "]\n";
+				nvbit_add_call_arg_cbank_val(instr, cbank.first, cbank.second, true);
 			}
 			/**************************************************************************/
 			cnt++;
