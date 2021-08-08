@@ -193,7 +193,7 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 
 			//instrument the constant operands
 			for (auto& cbank : cbank_values) {
-//				std::cout << "SASS: " << instr->getSass() << " - c[" << cbank.first << "]["
+//				std::cout << "SASS: " << instr->getSass() << " - c[" << std::hex << cbank.first << "]["
 //						<< cbank.second << "]\n";
 				nvbit_add_call_arg_cbank_val(instr, cbank.first, cbank.second, true);
 			}
