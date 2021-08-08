@@ -38,8 +38,8 @@
 #include "common.h"
 
 extern "C" __device__ __noinline__
-void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_regs,
-		int32_t num_cbank, int32_t va_list_size...) {
+void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
+		int32_t num_regs, int32_t num_cbank, int32_t va_list_size ...) {
 	if (!pred) {
 		return;
 	}
@@ -55,7 +55,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_
 	ri.cta_id_y = cta.y;
 	ri.cta_id_z = cta.z;
 	ri.warp_id = get_warpid();
-	/*Fernando PF modification */
+	/* Add new data to be logged */
 	ri.lane_id = laneid;
 	ri.sm_id = get_smid();
 	int4 ncta = get_nctaid();
@@ -101,7 +101,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_
 
 	/* first active lane pushes information on the channel */
 	if (first_laneid == laneid) {
-		ChannelDev *channel_dev = (ChannelDev *)pchannel_dev;
+		ChannelDev *channel_dev = (ChannelDev*) pchannel_dev;
 		channel_dev->push(&ri, sizeof(reg_info_t));
 	}
 }

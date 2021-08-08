@@ -323,23 +323,17 @@ void print_data_csv(reg_info_t* ri) {
 			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, ri->lane_id, ri->reg_vals[i][reg_idx]);
 			nvbit_trace_file << temp;
 		}
-		if (reg_idx < ri->num_regs - 1)
-			nvbit_trace_file << std::endl;
+		nvbit_trace_file << std::endl;
 	}
-	//printf("\n");
-	nvbit_trace_file << std::endl;
 
 	/* Print to the file the constant values */
-	for(int cbank_idx = 0; cbank_idx < ri->num_cbank; cbank_idx++){
+	for (int cbank_idx = 0; cbank_idx < ri->num_cbank; cbank_idx++) {
 		for (int i = 0; i < WARP_SIZE; i++) {
 			sprintf(temp, "C%dT%d:0x%08x ", cbank_idx, ri->lane_id, ri->cbank_vals[i][cbank_idx]);
 			nvbit_trace_file << temp;
 		}
-		if (cbank_idx < ri->num_cbank - 1)
-			nvbit_trace_file << std::endl;
+		nvbit_trace_file << std::endl;
 	}
-	nvbit_trace_file << std::endl;
-
 }
 
 void *recv_thread_fun(void *) {
