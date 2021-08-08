@@ -27,6 +27,8 @@
 
 #include <stdint.h>
 
+#define WARP_SIZE 32
+
 /* information collected in the instrumentation function and passed
  * on the channel from the GPU to the CPU */
 typedef struct {
@@ -48,7 +50,7 @@ typedef struct {
 	int32_t global_warp_id;
 
 	/* 32 lanes, each thread can store up to 5 register values */
-	uint32_t reg_vals[32][8];
+	uint32_t reg_vals[WARP_SIZE][8];
 	/*CBANK vals */
-	uint32_t cbank_vals[32][8];
+	uint32_t cbank_vals[WARP_SIZE][8];
 } reg_info_t;

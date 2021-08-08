@@ -173,11 +173,6 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 			nvbit_add_call_arg_const_val64(instr, (uint64_t) & channel_dev);
 			/* how many register values are passed next */
 			nvbit_add_call_arg_const_val32(instr, reg_num_list.size());
-			for (int num : reg_num_list) {
-				/* last parameter tells it is a variadic parameter passed to
-				 * the instrument function record_reg_val() */
-				nvbit_add_call_arg_reg_val(instr, num, true);
-			}
 			/**************************************************************************
 			 * Edit: trying to load all the cbank values
 			 **************************************************************************/
@@ -188,6 +183,14 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 			// For some reason I have to put the size of the operands at
 			// the end of the var list
 			nvbit_add_call_arg_const_val32(instr, reg_num_list.size() + cbank_values.size());
+
+			//REGs FIRST as I will read them before the cbank values
+			for (int num : reg_num_list) {
+				/* last parameter tells it is a variadic parameter passed to
+				 * the instrument function record_reg_val() */
+				nvbit_add_call_arg_reg_val(instr, num, true);
+			}
+
 			//instrument the constant operands
 			for (auto& cbank : cbank_values) {
 //				std::cout << "SASS: " << instr->getSass() << " - c[" << cbank.first << "]["
@@ -285,7 +288,7 @@ void print_data(reg_info_t* ri) {
 			id_to_sass_map[ri->opcode_id].c_str());
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		printf("* ");
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < WARP_SIZE; i++) {
 			printf("Reg%d_T%d: 0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
 		}
 		printf("\n");
@@ -315,7 +318,7 @@ void print_data_csv(reg_info_t* ri) {
 //	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
 	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < WARP_SIZE; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
 			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, ri->lane_id, ri->reg_vals[i][reg_idx]);
 			nvbit_trace_file << temp;
@@ -326,12 +329,21 @@ void print_data_csv(reg_info_t* ri) {
 	//printf("\n");
 	nvbit_trace_file << std::endl;
 
+	/* Print to the file the constant values */
+	for(int cbank_idx = 0; cbank_idx < ri->num_cbank; cbank_idx++){
+		for (int i = 0; i < WARP_SIZE; i++) {
+			sprintf(temp, "C%dT%d:0x%08x ", cbank_idx, ri->lane_id, ri->cbank_vals[i][cbank_idx]);
+			nvbit_trace_file << temp;
+		}
+		if (cbank_idx < ri->num_cbank - 1)
+			nvbit_trace_file << std::endl;
+	}
+	nvbit_trace_file << std::endl;
+
 }
 
 void *recv_thread_fun(void *) {
-	//32 is necessary if all threads in the warp will write to the final stack
-	constexpr auto final_size = CHANNEL_SIZE * 32;
-	char *recv_buffer = (char *) malloc(final_size);
+	char *recv_buffer = (char *) malloc(CHANNEL_SIZE);
 
 	while (recv_thread_started) {
 		uint32_t num_recv_bytes = 0;
