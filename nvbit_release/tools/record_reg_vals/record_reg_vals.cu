@@ -92,7 +92,7 @@ std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string&
 	for (uint32_t i = 1; i < match.size(); i += 2) {
 		auto bank_id = std::stoi(match[i], nullptr, 16);
 		auto bank_offset = std::stoi(match[i + 1], nullptr, 16);
-		std::pair < int32_t, int32_t > cbank(bank_id, bank_offset);
+		std::pair<int32_t, int32_t> cbank(bank_id, bank_offset);
 		cbank_list.push_back(cbank);
 	}
 	return cbank_list;
@@ -170,7 +170,7 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 			/* opcode id */
 			nvbit_add_call_arg_const_val32(instr, opcode_id);
 			/* add pointer to channel_dev*/
-			nvbit_add_call_arg_const_val64(instr, (uint64_t) & channel_dev);
+			nvbit_add_call_arg_const_val64(instr, (uint64_t) &channel_dev);
 			/* how many register values are passed next */
 			nvbit_add_call_arg_const_val32(instr, reg_num_list.size());
 			/**************************************************************************
@@ -234,13 +234,7 @@ void nvbit_at_cuda_event(CUcontext ctx, int is_exit, nvbit_api_cuda_t cbid, cons
 			instrument_function_if_needed(ctx, p->f);
 
 			nvbit_enable_instrumented(ctx, p->f, true);
-
-//			printf("Kernel %s - grid size %d,%d,%d - block size %d,%d,%d - nregs "
-//					"%d - shmem %d - cuda stream id %ld\n", nvbit_get_func_name(ctx, p->f),
-//					p->gridDimX, p->gridDimY, p->gridDimZ, p->blockDimX, p->blockDimY, p->blockDimZ,
-//					nregs, shmem_static_nbytes + p->sharedMemBytes, (uint64_t) p->hStream);
 			recv_thread_receiving = true;
-
 			/**
 			 * Fernando mod
 			 */
@@ -249,9 +243,6 @@ void nvbit_at_cuda_event(CUcontext ctx, int is_exit, nvbit_api_cuda_t cbid, cons
 					<< p->blockDimX << "," << p->blockDimY << "," << p->blockDimZ << " nregs "
 					<< nregs << " shmem " << shmem_static_nbytes + p->sharedMemBytes
 					<< " cudastreamid " << (uint64_t) p->hStream << std::endl;
-
-//			nvbit_trace_file << "cta_id_x,cta_id_y,cta_id_z,warp_id,global_warp_id,sm_id,lane_id,opcode\n";
-
 		} else {
 			/* make sure current kernel is completed */
 			cudaDeviceSynchronize();
@@ -297,11 +288,11 @@ void print_data(reg_info_t* ri) {
 }
 
 void print_data_csv(reg_info_t* ri) {
-//	printf("CTA %d,%d,%d - NCTA %d,%d,%d - WARPID %d - GWARPID %d - SMID %d - LANEID %d - ",
-//			ri->cta_id_x, ri->cta_id_y, ri->cta_id_z, // CTA
-//			ri->ncta_id_x, ri->ncta_id_y, ri->ncta_id_z, // NCTA
-//			ri->warp_id, ri->global_warp_id, ri->sm_id, ri->lane_id //WARP, global WARP, SM and LANE ID
-//			);
+	auto to_hex = [](uint32_t reg_val) {
+		std::stringstream stream;
+		stream << std::hex << reg_val;
+		return stream.str();
+	};
 
 	nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z
 			<< // CTA
@@ -310,19 +301,12 @@ void print_data_csv(reg_info_t* ri) {
 			" WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
 			<< " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
 
-//	nvbit_trace_file << ri->cta_id_x << "," << ri->cta_id_y                   << "," << ri->cta_id_z
-//				<< ri->warp_id  << "," << ri->global_warp_id             << "," << ri->sm_id
-//				<< ri->lane_id  << "," << id_to_sass_map[ri->opcode_id]  << ",";
-
-//	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
-//	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
-//	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		for (int i = 0; i < WARP_SIZE; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
 //			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
-//			nvbit_trace_file << temp;
-			nvbit_trace_file << "R" << reg_idx << "T" << i << ":" << ri->reg_vals[i][reg_idx] << " ";
+			nvbit_trace_file << "R" << reg_idx << "T" << i << ":"
+					<< to_hex(ri->reg_vals[i][reg_idx]) << " ";
 		}
 		nvbit_trace_file << std::endl;
 	}
@@ -332,7 +316,8 @@ void print_data_csv(reg_info_t* ri) {
 		for (int i = 0; i < WARP_SIZE; i++) {
 //			sprintf(temp, "C%dT%d:0x%08x ", cbank_idx, i, ri->cbank_vals[i][cbank_idx]);
 //			nvbit_trace_file << temp;
-			nvbit_trace_file << "C" << cbank_idx << "T" << i << ":" << ri->cbank_vals[i][cbank_idx] << " ";
+			nvbit_trace_file << "C" << cbank_idx << "T" << i << ":"
+					<< to_hex(ri->cbank_vals[i][cbank_idx]) << " ";
 		}
 		nvbit_trace_file << std::endl;
 	}
