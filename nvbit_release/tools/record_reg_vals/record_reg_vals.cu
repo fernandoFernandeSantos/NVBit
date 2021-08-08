@@ -316,12 +316,13 @@ void print_data_csv(reg_info_t* ri) {
 
 //	printf("%s\n", id_to_sass_map[ri->opcode_id].c_str());
 //	nvbit_trace_file << id_to_sass_map[ri->opcode_id] << std::endl;
-	char temp[128];
+//	char temp[128];
 	for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
 		for (int i = 0; i < WARP_SIZE; i++) {
 //			printf("R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
-			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, ri->lane_id, ri->reg_vals[i][reg_idx]);
-			nvbit_trace_file << temp;
+//			sprintf(temp, "R%dT%d:0x%08x ", reg_idx, i, ri->reg_vals[i][reg_idx]);
+//			nvbit_trace_file << temp;
+			nvbit_trace_file << "R" << reg_idx << "T" << i << ":" << ri->reg_vals[i][reg_idx] << " ";
 		}
 		nvbit_trace_file << std::endl;
 	}
@@ -329,8 +330,9 @@ void print_data_csv(reg_info_t* ri) {
 	/* Print to the file the constant values */
 	for (int cbank_idx = 0; cbank_idx < ri->num_cbank; cbank_idx++) {
 		for (int i = 0; i < WARP_SIZE; i++) {
-			sprintf(temp, "C%dT%d:0x%08x ", cbank_idx, ri->lane_id, ri->cbank_vals[i][cbank_idx]);
-			nvbit_trace_file << temp;
+//			sprintf(temp, "C%dT%d:0x%08x ", cbank_idx, i, ri->cbank_vals[i][cbank_idx]);
+//			nvbit_trace_file << temp;
+			nvbit_trace_file << "C" << cbank_idx << "T" << i << ":" << ri->cbank_vals[i][cbank_idx] << " ";
 		}
 		nvbit_trace_file << std::endl;
 	}
