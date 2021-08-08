@@ -77,7 +77,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
 				uint32_t val = va_arg(vl, uint32_t);
 
 				/* collect register values from other threads */
-				for (int tid = 0; tid < 32; tid++) {
+				for (int tid = 0; tid < WARP_SIZE; tid++) {
 					ri.reg_vals[tid][i] = __shfl_sync(active_mask, val, tid);
 				}
 			}
@@ -90,7 +90,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
 				uint32_t val = va_arg(vl, uint32_t);
 
 				/* collect cbank values from other threads */
-				for (int tid = 0; tid < 32; tid++) {
+				for (int tid = 0; tid < WARP_SIZE; tid++) {
 					ri.cbank_vals[tid][i] = __shfl_sync(active_mask, val, tid);
 				}
 			}
