@@ -49,6 +49,9 @@
 /* contains definition of the reg_info_t structure */
 #include "common.h"
 
+#define FATAL(error) throw std::runtime_error(std::string("ERROR ") + __FILE__ + ":" + std::to_string(__LINE__));
+
+
 /* Channel used to communicate from GPU to CPU receiving thread */
 #define CHANNEL_SIZE (1l << 20)
 static __managed__ ChannelDev channel_dev;
@@ -81,12 +84,11 @@ std::ofstream nvbit_trace_file;
 
 /*get the c[bankid][bankoffset] list from the sass instruction*/
 std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string &sass_line) {
-    std::regex sass_regex(R"(.*c\[(0[xX][0-9a-fA-F]+)\]\[(0[xX][0-9a-fA-F]+)\].*)");
+    std::regex sass_regex(R"(.*c\[([0-x-X]*[0-9a-fA-F]+)\]\[([0-x-X]*[R-r-0-9a-fA-F]+)\].*)");
     std::smatch match;
     auto m = std::regex_match(sass_line, match, sass_regex);
     if (!m && (sass_line.find("c[") != std::string::npos)) {
-        std::cerr << "Problem when parsing the SASS line " << sass_line << std::endl;
-        throw;
+        FATAL("Problem when parsing the SASS line " + sass_line);
     }
     std::vector<std::pair<int32_t, int32_t>> cbank_list;
     for (uint32_t i = 1; i < match.size(); i += 2) {
