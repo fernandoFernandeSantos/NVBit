@@ -92,10 +92,18 @@ std::vector<std::pair<int32_t, int32_t>> extract_cbank_vector(const std::string 
     }
     std::vector<std::pair<int32_t, int32_t>> cbank_list;
     for (uint32_t i = 1; i < match.size(); i += 2) {
-        auto bank_id = std::stoi(match[i], nullptr, 16);
-        auto bank_offset = std::stoi(match[i + 1], nullptr, 16);
-        std::pair<int32_t, int32_t> cbank(bank_id, bank_offset);
-        cbank_list.push_back(cbank);
+        std::string m1 = match[i];
+        std::string m2 = match[i + 1];
+        // TODO: treat the cases where there is a register for the constant bank
+        if (m1.find('R') != std::string::npos || m2.find('R') != std::string::npos) {
+//            m1.erase(m1.find('R'), 1);
+            std::cerr << "Found a instruction that uses the register file to load from constant " <<
+                      sass_line << std::endl;
+            continue;
+        }
+        std::pair<int32_t, int32_t> constant_bank(std::stoi(m1, nullptr, 16),
+                                                  std::stoi(m2, nullptr, 16));
+        cbank_list.push_back(constant_bank);
     }
     return cbank_list;
 }
