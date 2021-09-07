@@ -26,6 +26,7 @@
  */
 
 #pragma once
+
 #include <unistd.h>
 
 #undef CEILING
@@ -74,11 +75,10 @@ __device__ __forceinline__ unsigned int get_laneid(void) {
 
 // Get a global warp id
 __device__ __forceinline__ int get_global_warp_id() {
-    int block_id = blockIdx.x + blockIdx.y * gridDim.x +
-                   gridDim.x * gridDim.y * blockIdx.z;
+    int block_id = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
 
-    int l_thread_id = (threadIdx.z * (blockDim.x * blockDim.y)) +
-                      (threadIdx.y * blockDim.x) + threadIdx.x;
+    int l_thread_id = (threadIdx.z * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x)
+                      + threadIdx.x;
 
     int l_warp_id = l_thread_id / 32;
 
@@ -90,7 +90,7 @@ __device__ __forceinline__ int get_global_warp_id() {
 }
 
 // Get a thread's CTA ID
-__device__ __forceinline__ int4 get_ctaid(void) {
+__device__  __forceinline__ int4 get_ctaid(void) {
     int4 ret;
     asm("mov.u32 %0, %ctaid.x;" : "=r"(ret.x));
     asm("mov.u32 %0, %ctaid.y;" : "=r"(ret.y));
@@ -99,7 +99,7 @@ __device__ __forceinline__ int4 get_ctaid(void) {
 }
 
 //  Get the number of CTA ids per grid
-__device__ __forceinline__ int4 get_nctaid(void) {
+__device__  __forceinline__ int4 get_nctaid(void) {
     int4 ret;
     asm("mov.u32 %0, %nctaid.x;" : "=r"(ret.x));
     asm("mov.u32 %0, %nctaid.y;" : "=r"(ret.y));
@@ -109,7 +109,8 @@ __device__ __forceinline__ int4 get_nctaid(void) {
 
 // Device level sleep function
 __device__ __forceinline__ void csleep(uint64_t clock_count) {
-    if (clock_count == 0) return;
+    if (clock_count == 0)
+        return;
     clock_t start_clock = clock64();
     clock_t clock_offset = 0;
     while (clock_offset < clock_count) {
@@ -118,7 +119,7 @@ __device__ __forceinline__ void csleep(uint64_t clock_count) {
 }
 
 class Managed {
-  public:
+public:
     void *operator new(size_t len) {
         void *ptr;
         cudaMallocManaged(&ptr, len);
@@ -126,13 +127,18 @@ class Managed {
     }
 
     // void Managed::operator delete(void *ptr)
-    void operator delete(void *ptr) { cudaFree(ptr); }
+    void operator delete(void *ptr) {
+        cudaFree(ptr);
+    }
 
     void *operator new[](size_t len) {
         void *ptr;
         cudaMallocManaged(&ptr, len);
         return ptr;
     }
+
     // void Managed::operator delete[] (void* ptr) {
-    void operator delete[](void *ptr) { cudaFree(ptr); }
+    void operator delete[](void *ptr) {
+        cudaFree(ptr);
+    }
 };
