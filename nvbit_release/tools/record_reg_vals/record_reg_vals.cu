@@ -308,11 +308,15 @@ void print_data_csv(reg_info_t *ri) {
         return stream.str();
     };
 
-    nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z << // CTA
-                     " NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z << // NCTA
-                     " WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
-                     << " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id]
-                     << " INSTIDX " << ri->instruction_index << std::endl;
+    nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z  // CTA
+                     << " NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z  // NCTA
+                     << " WARPID " << ri->warp_id
+                     << " GWARPID " << ri->global_warp_id
+                     << " SMID " << ri->sm_id
+                     << " LANEID " << ri->lane_id
+                     << " INSTIDX " << ri->instruction_index
+                     << " SASS " << id_to_sass_map[ri->opcode_id]
+                     << std::endl;
 
     for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
         for (int i = 0; i < WARP_SIZE; i++) {
