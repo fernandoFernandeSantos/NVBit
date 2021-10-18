@@ -48,6 +48,7 @@ typedef struct {
 	int32_t ncta_id_y;
 	int32_t ncta_id_z;
 	int32_t global_warp_id;
+    int32_t instruction_index;
 
 	/* 32 lanes, each thread can store up to 5 register values */
 	uint32_t reg_vals[WARP_SIZE][8];

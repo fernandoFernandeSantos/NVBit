@@ -149,6 +149,7 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
 
         uint32_t cnt = 0;
         /* iterate on all the static instructions in the function */
+        int32_t instruction_index = 0;
         for (auto instr: instrs) {
             if (cnt < instr_begin_interval || cnt >= instr_end_interval) {
                 cnt++;
@@ -188,6 +189,8 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
             /**************************************************************************
              * Edit: trying to load all the cbank values
              **************************************************************************/
+            // Saving the instruction index
+            nvbit_add_call_arg_const_val32(instr, instruction_index++);
             // extract vector of pair with c[bankid][bankoffset]
             auto cbank_values = extract_cbank_vector(instr->getSass());
             // how many constant operands
@@ -195,7 +198,6 @@ void instrument_function_if_needed(CUcontext ctx, CUfunction func) {
             // For some reason I have to put the size of the operands at
             // the end of the var list
             nvbit_add_call_arg_const_val32(instr, reg_num_list.size() + cbank_values.size());
-
             //REGs FIRST as I will read them before the cbank values
             for (int num: reg_num_list) {
                 /* last parameter tells it is a variadic parameter passed to
@@ -309,7 +311,8 @@ void print_data_csv(reg_info_t *ri) {
     nvbit_trace_file << "CTA " << ri->cta_id_x << "," << ri->cta_id_y << "," << ri->cta_id_z << // CTA
                      " NCTA " << ri->ncta_id_x << "," << ri->ncta_id_y << "," << ri->ncta_id_z << // NCTA
                      " WARPID " << ri->warp_id << " GWARPID " << ri->global_warp_id << " SMID " << ri->sm_id
-                     << " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id] << std::endl;
+                     << " LANEID " << ri->lane_id << " " << id_to_sass_map[ri->opcode_id]
+                     << " INSTIDX " << ri->instruction_index << std::endl;
 
     for (int reg_idx = 0; reg_idx < ri->num_regs; reg_idx++) {
         for (int i = 0; i < WARP_SIZE; i++) {

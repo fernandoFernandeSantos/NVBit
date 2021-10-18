@@ -38,15 +38,15 @@
 #include "common.h"
 
 extern "C" __device__ __noinline__
-void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
-		int32_t num_regs, int32_t num_cbank, int32_t va_list_size ...) {
+void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev, int32_t num_regs,
+                    int32_t instruction_index, int32_t num_cbank, int32_t va_list_size ...) {
 	if (!pred) {
 		return;
 	}
 
 	unsigned active_mask = __ballot_sync(__activemask(), 1);
-	const int laneid = get_laneid();
-	const int first_laneid = __ffs(active_mask) - 1;
+	const int laneid = (int32_t)get_laneid();
+	const int first_laneid = __ffs((int32_t) active_mask) - 1;
 
 	reg_info_t ri;
 
@@ -54,10 +54,10 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
 	ri.cta_id_x = cta.x;
 	ri.cta_id_y = cta.y;
 	ri.cta_id_z = cta.z;
-	ri.warp_id = get_warpid();
+	ri.warp_id = (int32_t) get_warpid();
 	/* Add new data to be logged */
 	ri.lane_id = laneid;
-	ri.sm_id = get_smid();
+	ri.sm_id = (int32_t) get_smid();
 	int4 ncta = get_nctaid();
 	ri.ncta_id_x = ncta.x;
 	ri.ncta_id_y = ncta.y;
@@ -67,6 +67,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
 	ri.opcode_id = opcode_id;
 	ri.num_regs = num_regs;
 	ri.num_cbank = num_cbank;
+    ri.instruction_index = instruction_index;
 
 	if (va_list_size) {
 		va_list vl;
@@ -101,7 +102,7 @@ void record_reg_val(int pred, int opcode_id, uint64_t pchannel_dev,
 
 	/* first active lane pushes information on the channel */
 	if (first_laneid == laneid) {
-		ChannelDev *channel_dev = (ChannelDev*) pchannel_dev;
+		auto *channel_dev = (ChannelDev*) pchannel_dev;
 		channel_dev->push(&ri, sizeof(reg_info_t));
 	}
 }
